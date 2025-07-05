@@ -79,6 +79,25 @@ jobs:
         - name: Install libfobos
           run: git clone https://github.com/AlexandreRouma/libfobos ; cd libfobos ; mkdir build ; cd build ; cmake .. -DCMAKE_BUILD_TYPE=Release "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake" ; cmake --build . --config Release ; cmake --install .
 
+        - name: Download and extract windows dependencies libhydrasdr
+          if: runner.os == 'Windows'
+          shell: powershell
+          run: |
+            # Download dependencies
+            Invoke-WebRequest "https://github.com/libusb/libusb/releases/download/v1.0.23/libusb-1.0.23.7z" -OutFile "libusb.7z"
+            Invoke-WebRequest "https://gcc.gnu.org/pub/pthreads-win32/pthreads-w32-2-9-1-release.zip" -OutFile "pthreads.zip"
+            
+            # Extract libusb
+            New-Item -ItemType Directory -Path "deps\libusb" -Force
+            7z x libusb.7z -o"deps\libusb"
+            
+            # Extract pthreads
+            Expand-Archive pthreads.zip -DestinationPath "temp" -Force
+            $prebuilt = Get-ChildItem "temp" -Recurse -Directory | Where-Object { $_.Name -eq "Pre-built.2" }
+            New-Item -ItemType Directory -Path "deps\pthreads" -Force
+            Copy-Item "$($prebuilt.FullName)\*" -Destination "deps\pthreads" -Recurse -Force
+            Remove-Item "temp" -Recurse -Force
+        
         - name: Install libhydrasdr
           run: git clone https://github.com/hydrasdr/rfone_host ; cd rfone_host ; mkdir build ; cd build ; cmake .. -DCMAKE_BUILD_TYPE=Release "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake" ; cmake --build . --config Release ; cmake --install .
 
