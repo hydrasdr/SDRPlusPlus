@@ -93,7 +93,7 @@ jobs:
               "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake" `
               -DVCPKG_TARGET_TRIPLET=x64-windows `
               "-DTHREADS_PTHREADS_INCLUDE_DIR=C:/vcpkg/installed/x64-windows/include" `
-              "-DTHREADS_PTHREADS_WIN32_LIBRARY=C:/vcpkg/installed/x64-windows/lib/pthreadVC2.lib"
+              "-DTHREADS_PTHREADS_WIN32_LIBRARY=C:/vcpkg/installed/x64-windows/lib/pthreadVC3.lib"
             cmake --build . --config Release
             cmake --install .
 
@@ -111,7 +111,6 @@ jobs:
                 Copy-Item $header.FullName "C:/Program Files/PothosSDR/include/"
                 Write-Host "Copied header: $($header.Name)"
             }
-            
             # Copy built libraries from build directory
             cd build
             $libraries = Get-ChildItem -Recurse -Filter "*hydrasdr*" | Where-Object { $_.Extension -in @('.lib', '.dll') }
@@ -123,6 +122,8 @@ jobs:
                 }
                 Write-Host "Copied library: $($lib.Name)"
             }
+            # Copy pthreadVC3.dll from vcpkg to PothosSDR bin directory
+            Copy-Item "C:/vcpkg/installed/x64-windows/bin/pthreadVC3.dll" "C:/Program Files/PothosSDR/bin/"
 
         - name: Prepare CMake
           working-directory: ${{runner.workspace}}/build
