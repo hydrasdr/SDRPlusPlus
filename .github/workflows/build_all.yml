@@ -8,6 +8,10 @@ on:
         branches-ignore:
         - nightly
 
+permissions:
+  contents: write    # Required for creating releases and uploading files
+  actions: read      # Standard workflow permission
+
 env:
     # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
     BUILD_TYPE: Release
@@ -699,13 +703,19 @@ jobs:
         needs: [create_full_archive]
         runs-on: ubuntu-latest
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-
         steps:
         - name: Download All Builds
           uses: actions/download-artifact@v4
-
-        - name: Update Nightly
-          run: gh release upload nightly sdrpp_all/* -R ${{github.repository}} --clobber
+          
+        - name: Create or Update Nightly Release
+          env:
+            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          run: |
+            # Check if nightly release exists, create if not
+            gh release view nightly -R ${{github.repository}} 2>/dev/null || gh release create nightly -R ${{github.repository}} --title "Nightly Build" --notes "Automated nightly build from CI - Built from commit ${{ github.sha }}" --prerelease
+            
+            # Upload artifacts (--clobber overwrites existing files)
+            gh release upload nightly sdrpp_all/* -R ${{github.repository}} --clobber
 
     check_spelling:
         runs-on: ubuntu-latest
