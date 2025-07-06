@@ -34,6 +34,7 @@ cp $build_dir/source_modules/hermes_source/Release/hermes_source.dll sdrpp_windo
 
 cp $build_dir/source_modules/hydrasdr_rfone_source/Release/hydrasdr_rfone_source.dll sdrpp_windows_x64/modules/
 cp 'C:/Program Files/PothosSDR/bin/hydrasdr.dll' sdrpp_windows_x64/
+cp 'C:/Program Files/PothosSDR/bin/pthreadVC3.dll' sdrpp_windows_x64/
 
 cp $build_dir/source_modules/limesdr_source/Release/limesdr_source.dll sdrpp_windows_x64/modules/
 cp 'C:/Program Files/PothosSDR/bin/LimeSuite.dll' sdrpp_windows_x64/
