@@ -78,7 +78,7 @@ jobs:
 
         - name: Install libfobos
           run: git clone https://github.com/AlexandreRouma/libfobos ; cd libfobos ; mkdir build ; cd build ; cmake .. -DCMAKE_BUILD_TYPE=Release "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake" ; cmake --build . --config Release ; cmake --install .       
-        
+
         - name: Install libhydrasdr
           run: |
             git clone https://github.com/hydrasdr/rfone_host
@@ -92,6 +92,33 @@ jobs:
               "-DTHREADS_PTHREADS_WIN32_LIBRARY=C:/vcpkg/installed/x64-windows/lib/pthreadVC3.lib"
             cmake --build . --config Release
             cmake --install .
+
+        - name: Install HydraSDR RFOne Headers and Libraries
+          run: |
+            # Create directories
+            New-Item -ItemType Directory -Path "C:/Program Files/PothosSDR/include" -Force
+            New-Item -ItemType Directory -Path "C:/Program Files/PothosSDR/lib" -Force
+            New-Item -ItemType Directory -Path "C:/Program Files/PothosSDR/bin" -Force
+            
+            # Find and copy hydrasdr headers
+            cd rfone_host
+            $headers = Get-ChildItem -Recurse -Filter "hydrasdr*.h"
+            foreach ($header in $headers) {
+                Copy-Item $header.FullName "C:/Program Files/PothosSDR/include/"
+                Write-Host "Copied header: $($header.Name)"
+            }
+            
+            # Copy built libraries from build directory
+            cd build
+            $libraries = Get-ChildItem -Recurse -Filter "*hydrasdr*" | Where-Object { $_.Extension -in @('.lib', '.dll') }
+            foreach ($lib in $libraries) {
+                if ($lib.Extension -eq '.dll') {
+                    Copy-Item $lib.FullName "C:/Program Files/PothosSDR/bin/"
+                } else {
+                    Copy-Item $lib.FullName "C:/Program Files/PothosSDR/lib/"
+                }
+                Write-Host "Copied library: $($lib.Name)"
+            }
 
         - name: Prepare CMake
           working-directory: ${{runner.workspace}}/build
