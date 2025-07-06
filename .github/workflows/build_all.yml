@@ -93,7 +93,7 @@ jobs:
               "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake" `
               -DVCPKG_TARGET_TRIPLET=x64-windows `
               "-DTHREADS_PTHREADS_INCLUDE_DIR=C:/vcpkg/installed/x64-windows/include" `
-              "-DTHREADS_PTHREADS_WIN32_LIBRARY=C:/vcpkg/installed/x64-windows/lib/pthreadVC3.lib"
+              "-DTHREADS_PTHREADS_WIN32_LIBRARY=C:/vcpkg/installed/x64-windows/lib/pthreadVC2.lib"
             cmake --build . --config Release
             cmake --install .
 
