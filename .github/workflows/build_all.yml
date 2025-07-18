@@ -603,8 +603,6 @@ jobs:
           'build_windows',
           'build_macos_intel',
           'build_macos_arm',
-          'build_debian_buster_amd64',
-          'build_debian_buster_aarch64',
           'build_debian_bullseye_amd64',
           'build_debian_bullseye_aarch64',
           'build_debian_bookworm_amd64',
@@ -633,8 +631,6 @@ jobs:
             mv sdrpp_windows_x64/sdrpp_windows_x64.zip sdrpp_all/ && 
             mv sdrpp_macos_intel/sdrpp_macos_intel.zip sdrpp_all/ && 
             mv sdrpp_macos_arm/sdrpp_macos_arm.zip sdrpp_all/ && 
-            mv sdrpp_debian_buster_amd64/sdrpp_debian_amd64.deb sdrpp_all/sdrpp_debian_buster_amd64.deb && 
-            mv sdrpp_debian_buster_aarch64/sdrpp_debian_amd64.deb sdrpp_all/sdrpp_debian_buster_aarch64.deb && 
             mv sdrpp_debian_bullseye_amd64/sdrpp_debian_amd64.deb sdrpp_all/sdrpp_debian_bullseye_amd64.deb &&
             mv sdrpp_debian_bullseye_aarch64/sdrpp_debian_amd64.deb sdrpp_all/sdrpp_debian_bullseye_aarch64.deb &&
             mv sdrpp_debian_bookworm_amd64/sdrpp_debian_amd64.deb sdrpp_all/sdrpp_debian_bookworm_amd64.deb && 
