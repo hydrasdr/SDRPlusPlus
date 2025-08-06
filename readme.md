@@ -63,6 +63,15 @@ There are currently no existing packages for other distributions, for these syst
 
 Download the app bundle from the latest [nightly build](https://www.sdrpp.org/nightly)
 
+Hint from customer if you have issue "HydraSDR RFOne" doesn't appear in the source list on macOS:
+> I got it to work. SDR++ is installed in the folder /Applications.
+> Executing the command below in a terminal session starts SDR++, creates the directory ~/tmp/sdrpp, then puts some files in it.
+> The HydraSDR RFOne is visible in the Source selection. I was then able to select a bandwidth of 10Mhz, 5Mhz and 2.5MHz.
+> /Applications/SDR++.app/Contents/MacOS/sdrpp --root ~/tmp/sdrpp
+> 
+> When you are not familiar with macOS, allow me a little explanation, what the above command is about.
+> In contrast to Windows, where an Application is just the .exe file and needed resource files are kept somewhere else, an application in macOS is a folder. The Finder (the macOS File Explorer) displays the folder as an application icon, a double clock starts the application. In the graphical user interface, the application is /Applications/SDR++.app, in reality it is a folder that holds the executable and other files. The executable is in the Contents/MacOS subdirectory of the application folder. That explains the full path used from the command line. The parameter --root tells the SDR++ where to store a bunch of config files and recordings. The character '~' is a shorthand for the user's home directory. In my case /Users/lange.
+
 ## BSD
 
 There are currently no BSD packages, refer to [Building on Linux / BSD](https://github.com/AlexandreRouma/SDRPlusPlus#building-on-linux--bsd) for instructions on building from source.
