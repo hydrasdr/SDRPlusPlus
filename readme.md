@@ -1,6 +1,6 @@
-# SDR++, The bloat-free SDR software<br>
+# SDR++ fork for HydraSDR RFOne, The bloat-free SDR software<br>
 
-![Screenshot](https://i.imgur.com/Ter2MQJ.png)
+![Screenshot](https://hydrasdr.com/wp-content/uploads/2025/05/SDR_HydraSDR_RFOne_ThemeDeepBlue_1.png)
 SDR++ is a cross-platform and open source SDR software with the aim of being bloat free and simple to use.
 
 ![Build](https://github.com/hydrasdr/SDRPlusPlus/workflows/Build%20Binaries/badge.svg)
@@ -8,7 +8,6 @@ SDR++ is a cross-platform and open source SDR software with the aim of being blo
 * [Patreon](https://patreon.com/ryzerth)
 * [Discord Server](https://discord.gg/aFgWjyD)
 * [Reddit](https://www.reddit.com/r/sdrpp/)
-* IRC: `#sdrpp` ([libera.chat](https://libera.chat)) __**NO LONGER ACTIVE, JOIN DISCORD INSTEAD**__
 
 ## Features
 
@@ -28,6 +27,16 @@ Nightly builds contain the very latest features and bugfixes. They are usually j
 You can download them [here](https://github.com/hydrasdr/SDRPlusPlus/releases/tag/nightly). It'll redirect you to the latest nightly on GitHub, scroll down to "Artifacts" and click on the version for your OS.
 
 GitHub currently requires an account for the files to be downloadable so make sure you are logged in.
+
+## If "HydraSDR RFOne" does not appear in the source list
+> **Note:** This issue only affects **existing SDR++ users** upgrading from older versions.
+> **New users** installing for the first time will not encounter this problem.
+1. Open the **SDR++ Module Manager**.
+2. Locate **hydrasdr\_rfone\_source** in the list.
+3. Add it with the name **HydraSDR RFOne Source**, then click **+** to confirm. 
+- <img width="375" height="260" alt="image" src="https://github.com/user-attachments/assets/b0687b8a-06cf-4f39-8623-9a31946090ac" />
+4. You should now be able to select **HydraSDR RFOne** from the source list. 
+- <img width="388" height="322" alt="SDR++_Configure_HydraSDR RFOne Source" src="https://github.com/user-attachments/assets/249bf996-9fa1-497a-83d2-f22104cf5cde" />
 
 ## Windows
 
@@ -62,29 +71,6 @@ There are currently no existing packages for other distributions, for these syst
 ## MacOS
 
 Download the app bundle from the latest [nightly build](https://github.com/hydrasdr/SDRPlusPlus/releases/tag/nightly)
-
-### **If HydraSDR RFOne doesn't appear in the source list:**
-
-This issue affects **existing SDR++ users** who are upgrading from older versions.
-**New users** installing for the first time should not experience this problem.
-
-**Choose the easiest solution for you:**
-
-#### **Quick Fix (Easiest)**
-Delete your old configuration to force SDR++ to create a fresh one:
-```bash
-rm -rf ~/Library/Application\ Support/sdrpp
-```
-Then launch SDR++ normally by double-clicking the app. HydraSDR RFOne will now appear in the source list.
-
-**Note:** This will reset all your SDR++ settings (frequency bookmarks, themes, etc.)
-
-#### **Alternative Fix (Preserves Settings)**
-Launch SDR++ from Terminal with a temporary configuration directory:
-```bash
-/Applications/SDR++.app/Contents/MacOS/sdrpp --root ~/tmp/sdrpp
-```
-This creates a fresh configuration while keeping your original settings intact.
 
 ## BSD
 
