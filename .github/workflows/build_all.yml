@@ -92,6 +92,8 @@ jobs:
             cmake .. -DCMAKE_BUILD_TYPE=Release `
               "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake" `
               -DVCPKG_TARGET_TRIPLET=x64-windows `
+              "-DLIBUSB_LIBRARIES=C:\Program Files\PothosSDR\lib\libusb-1.0.lib" `
+              "-DLIBUSB_INCLUDE_DIR=C:\Program Files\PothosSDR\include\libusb-1.0" `
               "-DTHREADS_PTHREADS_INCLUDE_DIR=C:/vcpkg/installed/x64-windows/include" `
               "-DTHREADS_PTHREADS_WIN32_LIBRARY=C:/vcpkg/installed/x64-windows/lib/pthreadVC3.lib"
             cmake --build . --config Release
