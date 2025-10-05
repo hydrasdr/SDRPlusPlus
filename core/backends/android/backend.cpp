@@ -409,7 +409,8 @@ namespace backend {
     };
 
     const std::vector<DevVIDPID> HYDRASDR_RFONE_VIDPIDS = {
-        { 0x1d50, 0x60a1 }
+        { 0x1d50, 0x60a1 },
+        { 0x38af, 0x0001 }
     };
 
     const std::vector<DevVIDPID> RTL_SDR_VIDPIDS = {
