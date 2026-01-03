@@ -353,7 +353,7 @@ jobs:
               name: sdrpp_debian_bookworm_aarch64
               path: ${{runner.workspace}}/sdrpp_debian_amd64.deb
 
-d    build_debian_trixie_amd64:
+    build_debian_trixie_amd64:
         runs-on: ubuntu-latest
 
         steps:
