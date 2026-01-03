@@ -8,6 +8,7 @@
 #include <config.h>
 #include <gui/smgui.h>
 #include <hydrasdr.h>
+#include <utils/optionlist.h>
 
 #ifdef __ANDROID__
 #include <android_backend.h>
@@ -16,19 +17,27 @@
 #define CONCAT(a, b) ((std::string(a) + b).c_str())
 
 SDRPP_MOD_INFO{
-    /* Name:            */ "hydrasdr_rfone_source",
-    /* Description:     */ "HydraSDR RFOne source module for SDR++",
+    /* Name:            */ "hydrasdr_source",
+    /* Description:     */ "HydraSDR source module for SDR++",
     /* Author:          */ "Ryzerth/B.VERNOUX",
-    /* Version:         */ 0, 1, 0,
+    /* Version:         */ 0, 1, 1,
     /* Max instances    */ 1
 };
 
 ConfigManager config;
 
-class HydraSDR_RFOne_SourceModule : public ModuleManager::Instance {
+class HydraSDRSourceModule : public ModuleManager::Instance {
 public:
-    HydraSDR_RFOne_SourceModule(std::string name) {
+    HydraSDRSourceModule(std::string name) {
         this->name = name;
+
+        // Define the ports
+        ports.define("rx0", "RX0", HYDRASDR_RF_PORT_RX0);
+        ports.define("rx1", "RX1", HYDRASDR_RF_PORT_RX1);
+        ports.define("rx2", "RX2", HYDRASDR_RF_PORT_RX2);
+
+        regStr[0] = 0;
+        valStr[0] = 0;
 
         sampleRate = 10000000.0;
 
@@ -42,9 +51,6 @@ public:
         handler.stream = &stream;
 
         refresh();
-        if (sampleRateList.size() > 0) {
-            sampleRate = sampleRateList[0];
-        }
 
         // Select device from config
         config.acquire();
@@ -52,12 +58,12 @@ public:
         config.release();
         selectByString(devSerial);
 
-        sigpath::sourceManager.registerSource("HydraSDR RFOne", &handler);
+        sigpath::sourceManager.registerSource("HydraSDR", &handler);
     }
 
-    ~HydraSDR_RFOne_SourceModule() {
+    ~HydraSDRSourceModule() {
         stop(this);
-        sigpath::sourceManager.unregisterSource("HydraSDR RFOne");
+        sigpath::sourceManager.unregisterSource("HydraSDR");
     }
 
     void postInit() {}
@@ -76,8 +82,7 @@ public:
 
     void refresh() {
 #ifndef __ANDROID__
-        devList.clear();
-        devListTxt = "";
+        devices.clear();
 
         uint64_t serials[256];
         int n = hydrasdr_list_devices(serials, 256);
@@ -85,39 +90,30 @@ public:
         char buf[1024];
         for (int i = 0; i < n; i++) {
             sprintf(buf, "%016" PRIX64, serials[i]);
-            devList.push_back(serials[i]);
-            devListTxt += buf;
-            devListTxt += '\0';
+            devices.define(buf, buf, serials[i]);
         }
 #else
         // Check for device presence
         int vid, pid;
-        devFd = backend::getDeviceFD(vid, pid, backend::HYDRASDR_RFONE_VIDPIDS);
+        devFd = backend::getDeviceFD(vid, pid, backend::HYDRASDR_VIDPIDS);
         if (devFd < 0) { return; }
 
         // Get device info
-        std::string fakeName = "HydraSDR RFOne USB";
-        devList.push_back(0xDEADBEEF);
-        devListTxt += fakeName;
-        devListTxt += '\0';
+        std::string fakeName = "HydraSDR USB";
+        devices.define(fakeName, 0);
 #endif
     }
 
     void selectFirst() {
-        if (devList.size() != 0) {
-            selectBySerial(devList[0]);
+        if (!devices.empty()) {
+            selectBySerial(devices.value(0));
         }
     }
 
     void selectByString(std::string serial) {
-        char buf[1024];
-        for (int i = 0; i < devList.size(); i++) {
-            sprintf(buf, "%016" PRIX64, devList[i]);
-            std::string str = buf;
-            if (serial == str) {
-                selectBySerial(devList[i]);
-                return;
-            }
+        if (devices.keyExists(serial)) {
+            selectBySerial(devices.value(devices.keyId(serial)));
+            return;
         }
         selectFirst();
     }
@@ -143,23 +139,18 @@ public:
             sprintf(buf, "%016" PRIX64, serial);
             flog::error("Could not open HydraSDR {}", buf);
         }
+        devId = devices.valueId(serial);
         selectedSerial = serial;
+        selectedSerStr = devices.key(devId);
 
         uint32_t sampleRates[256];
         hydrasdr_get_samplerates(dev, sampleRates, 0);
         int n = sampleRates[0];
         hydrasdr_get_samplerates(dev, sampleRates, n);
-        sampleRateList.clear();
-        sampleRateListTxt = "";
+        samplerates.clear();
         for (int i = 0; i < n; i++) {
-            sampleRateList.push_back(sampleRates[i]);
-            sampleRateListTxt += getBandwdithScaled(sampleRates[i]);
-            sampleRateListTxt += '\0';
+            samplerates.define(sampleRates[i], getBandwdithScaled(sampleRates[i]), sampleRates[i]);
         }
-
-        char buf[1024];
-        sprintf(buf, "%016" PRIX64, serial);
-        selectedSerStr = std::string(buf);
 
         // Load config here
         config.acquire();
@@ -176,19 +167,25 @@ public:
             config.conf["devices"][selectedSerStr]["lnaAgc"] = false;
             config.conf["devices"][selectedSerStr]["mixerAgc"] = false;
             config.conf["devices"][selectedSerStr]["biasT"] = false;
+            config.conf["devices"][selectedSerStr]["algorithm"] = "47_opt";
         }
 
         // Load sample rate
         srId = 0;
-        sampleRate = sampleRateList[0];
+        sampleRate = samplerates.value(0);
         if (config.conf["devices"][selectedSerStr].contains("sampleRate")) {
             int selectedSr = config.conf["devices"][selectedSerStr]["sampleRate"];
-            for (int i = 0; i < sampleRateList.size(); i++) {
-                if (sampleRateList[i] == selectedSr) {
-                    srId = i;
-                    sampleRate = selectedSr;
-                    break;
-                }
+            if (samplerates.keyExists(selectedSr)) {
+                srId = samplerates.keyId(selectedSr);
+                sampleRate = samplerates[srId];
+            }
+        }
+
+        // Load port
+        if (config.conf["devices"][selectedSerStr].contains("port")) {
+            std::string portStr = config.conf["devices"][selectedSerStr]["port"];
+            if (ports.keyExists(portStr)) {
+                portId = ports.keyId(portStr);
             }
         }
 
@@ -244,18 +241,38 @@ private:
     }
 
     static void menuSelected(void* ctx) {
-        HydraSDR_RFOne_SourceModule* _this = (HydraSDR_RFOne_SourceModule*)ctx;
+        HydraSDRSourceModule* _this = (HydraSDRSourceModule*)ctx;
         core::setInputSampleRate(_this->sampleRate);
-        flog::info("HydraSDR_RFOne_SourceModule '{0}': Menu Select!", _this->name);
+        flog::info("HydraSDRSourceModule '{0}': Menu Select!", _this->name);
     }
 
     static void menuDeselected(void* ctx) {
-        HydraSDR_RFOne_SourceModule* _this = (HydraSDR_RFOne_SourceModule*)ctx;
-        flog::info("HydraSDR_RFOne_SourceModule '{0}': Menu Deselect!", _this->name);
+        HydraSDRSourceModule* _this = (HydraSDRSourceModule*)ctx;
+        flog::info("HydraSDRSourceModule '{0}': Menu Deselect!", _this->name);
     }
 
+	static int hydrasdr_dump_registers(struct hydrasdr_device* device, uint8_t register_number, const uint8_t length, unsigned char* data)
+	{
+		uint8_t i;
+		int result = HYDRASDR_SUCCESS;
+
+		for(i=register_number; i<32; i++)
+		{
+			result = hydrasdr_r82x_read(device, i, &data[i]);
+			/*
+			if( result == HYDRASDR_SUCCESS ) {
+				//printf("[%3d] -> 0x%02X\n", i, register_value);
+			} else {
+				//printf("hydrasdr_r82x_read() failed: %s (%d)\n", hydrasdr_error_name(result), result);
+			}
+			*/
+		}
+
+		return result;
+	}
+
     static void start(void* ctx) {
-        HydraSDR_RFOne_SourceModule* _this = (HydraSDR_RFOne_SourceModule*)ctx;
+        HydraSDRSourceModule* _this = (HydraSDRSourceModule*)ctx;
         if (_this->running) { return; }
         if (_this->selectedSerial == 0) {
             flog::error("Tried to start HydraSDR source with null serial");
@@ -274,9 +291,10 @@ private:
             return;
         }
 
-        hydrasdr_set_samplerate(_this->openDev, _this->sampleRateList[_this->srId]);
+        hydrasdr_set_samplerate(_this->openDev, _this->samplerates[_this->srId]);
         hydrasdr_set_freq(_this->openDev, _this->freq);
-
+        hydrasdr_set_rf_port(_this->openDev, _this->ports[_this->portId]);
+		
         if (_this->gainMode == 0) {
             hydrasdr_set_lna_agc(_this->openDev, 0);
             hydrasdr_set_mixer_agc(_this->openDev, 0);
@@ -310,37 +328,37 @@ private:
         hydrasdr_start_rx(_this->openDev, callback, _this);
 
         _this->running = true;
-        flog::info("HydraSDR_RFOne_SourceModule '{0}': Start!", _this->name);
+        flog::info("HydraSDRSourceModule '{0}': Start!", _this->name);
     }
 
     static void stop(void* ctx) {
-        HydraSDR_RFOne_SourceModule* _this = (HydraSDR_RFOne_SourceModule*)ctx;
+        HydraSDRSourceModule* _this = (HydraSDRSourceModule*)ctx;
         if (!_this->running) { return; }
         _this->running = false;
         _this->stream.stopWriter();
         hydrasdr_close(_this->openDev);
         _this->stream.clearWriteStop();
-        flog::info("HydraSDR_RFOne_SourceModule '{0}': Stop!", _this->name);
+        flog::info("HydraSDRSourceModule '{0}': Stop!", _this->name);
     }
 
     static void tune(double freq, void* ctx) {
-        HydraSDR_RFOne_SourceModule* _this = (HydraSDR_RFOne_SourceModule*)ctx;
+        HydraSDRSourceModule* _this = (HydraSDRSourceModule*)ctx;
         if (_this->running) {
             hydrasdr_set_freq(_this->openDev, freq);
         }
         _this->freq = freq;
-        flog::info("HydraSDR_RFOne_SourceModule '{0}': Tune: {1}!", _this->name, freq);
+        flog::info("HydraSDRSourceModule '{0}': Tune: {1}!", _this->name, freq);
     }
 
     static void menuHandler(void* ctx) {
-        HydraSDR_RFOne_SourceModule* _this = (HydraSDR_RFOne_SourceModule*)ctx;
+        HydraSDRSourceModule* _this = (HydraSDRSourceModule*)ctx;
 
         if (_this->running) { SmGui::BeginDisabled(); }
 
         SmGui::FillWidth();
         SmGui::ForceSync();
-        if (SmGui::Combo(CONCAT("##_hydrasdr_dev_sel_", _this->name), &_this->devId, _this->devListTxt.c_str())) {
-            _this->selectBySerial(_this->devList[_this->devId]);
+        if (SmGui::Combo(CONCAT("##_hydrasdr_dev_sel_", _this->name), &_this->devId, _this->devices.txt)) {
+            _this->selectBySerial(_this->devices[_this->devId]);
             core::setInputSampleRate(_this->sampleRate);
             if (_this->selectedSerStr != "") {
                 config.acquire();
@@ -349,12 +367,12 @@ private:
             }
         }
 
-        if (SmGui::Combo(CONCAT("##_hydrasdr_sr_sel_", _this->name), &_this->srId, _this->sampleRateListTxt.c_str())) {
-            _this->sampleRate = _this->sampleRateList[_this->srId];
+        if (SmGui::Combo(CONCAT("##_hydrasdr_sr_sel_", _this->name), &_this->srId, _this->samplerates.txt)) {
+            _this->sampleRate = _this->samplerates[_this->srId];
             core::setInputSampleRate(_this->sampleRate);
             if (_this->selectedSerStr != "") {
                 config.acquire();
-                config.conf["devices"][_this->selectedSerStr]["sampleRate"] = _this->sampleRate;
+                config.conf["devices"][_this->selectedSerStr]["sampleRate"] = _this->samplerates.key(_this->srId);
                 config.release(true);
             }
         }
@@ -372,6 +390,143 @@ private:
         }
 
         if (_this->running) { SmGui::EndDisabled(); }
+
+		if (ImGui::CollapsingHeader("Tuner Registers")) {
+			static bool show_registers = false;
+			static bool registers_changed = false;
+			static uint8_t regs[32] = { 0 };
+			static uint8_t prev_regs[32] = { 0 };
+			static std::array<bool, 32> reg_changed = {false};  // Changed to track individual registers
+
+			if (ImGui::Button(CONCAT("DumpTunerRegs##_hydrasdr_refr_", _this->name))) {
+				if (_this->running) {
+					// Dump Tuner Registers
+					int result;
+					char buf[256];
+					auto startTime = std::chrono::high_resolution_clock::now();
+					result = hydrasdr_dump_registers(_this->openDev, 0, 32, &regs[0]);
+					if( result == HYDRASDR_SUCCESS ) {
+						//flog::info("hydrasdr_dump_registers reg 33 = {0}", buf);
+					} else {
+						flog::info("hydrasdr_dump_registers() failed");
+					}
+					auto endTime = std::chrono::high_resolution_clock::now();
+					flog::warn("hydrasdr_dump_registers to read 32 registers took {0} us", (int64_t)((std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime)).count()));
+					for(int i = 0; i < 32; i+=8) 
+					{
+						sprintf(buf, "%02d: 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X", 
+								i, regs[i+0], regs[i+1], regs[i+2], regs[i+3], regs[i+4], regs[i+5], regs[i+6], regs[i+7]);
+						flog::info("hydrasdr_dump_registers {0}", buf);
+					}
+					registers_changed = true;
+					
+					// Check which individual registers have changed
+					for (int i = 0; i < 32; i++) {
+						reg_changed[i] = (regs[i] != prev_regs[i]);
+					}
+					std::memcpy(prev_regs, regs, sizeof(regs));
+				}
+			}
+			ImGui::Checkbox("Show Registers", &show_registers);
+			if (show_registers) {
+				static ImFont* monoFont = nullptr;
+				/*
+				if(monoFont == nullptr) {
+					// Configure the font to be monospaced
+					ImGuiIO& io = ImGui::GetIO();
+					// Load the ProggyClean built-in monospaced font (size 13)
+					io.Fonts->AddFontDefault();  // This line adds the default proportional font (optional)
+					monoFont = io.Fonts->AddFontFromFileTTF(NULL, 13.0f);  // Built-in monospaced font
+					// Rebuild the font atlas
+					io.Fonts->Build();
+				}
+				*/
+				if(monoFont != nullptr)
+					ImGui::PushFont(monoFont);
+				ImGui::BeginChild("RegistersDisplay", ImVec2(0, ImGui::GetTextLineHeight() * 5), false, ImGuiWindowFlags_NoScrollbar);
+				
+				for (int i = 0; i < 32; i += 8) {
+					char line_start[8];
+					snprintf(line_start, sizeof(line_start), "%02d:", i);
+					ImGui::Text("%s", line_start);
+					ImGui::SameLine();
+					
+					for (int j = 0; j < 8; ++j) {
+						int idx = i + j;
+						ImVec4 color = reg_changed[idx] ? ImVec4(0.0f, 1.0f, 0.0f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+						char reg_value[8];
+						snprintf(reg_value, sizeof(reg_value), "0x%02X", regs[idx]);
+						ImGui::TextColored(color, "%s", reg_value);
+						if (j < 7) ImGui::SameLine();
+					}
+				}
+
+				ImGui::EndChild();
+
+				if (ImGui::BeginPopupContextItem("RegisterContextMenu")) {
+					if (ImGui::MenuItem("Copy All")) {
+						std::string display_text;
+						char line_buffer[128];
+						for (int i = 0; i < 32; i += 8) {
+							int chars_written = snprintf(line_buffer, sizeof(line_buffer), "%02d: ", i);
+							for (int j = 0; j < 8; ++j) {
+								chars_written += snprintf(line_buffer + chars_written, sizeof(line_buffer) - chars_written, 
+														  "0x%02X ", regs[i + j]);
+							}
+							display_text += std::string(line_buffer) + "\n";
+						}
+						ImGui::SetClipboardText(display_text.c_str());
+					}
+					ImGui::EndPopup();
+				}
+				if(monoFont != nullptr)
+					ImGui::PopFont(); // Restore font
+				
+				// Tuner Register Manual Write
+				static int man_reg = 0;
+				static char man_val[5] = "00";
+
+				ImGui::Text("Tuner");
+				ImGui::SameLine();
+				ImGui::Text("RegNum:");
+				ImGui::SameLine();
+				ImGui::PushItemWidth(30);
+				ImGui::InputInt("##man_reg", &man_reg, 0, 0);
+				ImGui::PopItemWidth();
+				if (man_reg < 0) man_reg = 0;
+				if (man_reg > 31) man_reg = 31;
+
+				ImGui::SameLine();
+				ImGui::Text("RegVal(Hex):");
+				ImGui::SameLine();
+				ImGui::PushItemWidth(30);
+				ImGui::InputText("##man_val", man_val, 5, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
+				ImGui::PopItemWidth();
+
+				ImGui::SameLine();
+				if (SmGui::Button("Write")) {
+					if (_this->running) {
+						unsigned int v = 0;
+						sscanf(man_val, "%x", &v);
+						flog::info("hydrasdr_r82x_write RegNum:{0} RegVal:{1}", (uint8_t)man_reg, (uint8_t)v);
+						hydrasdr_r82x_write(_this->openDev, (uint8_t)man_reg, (uint8_t)v);
+					}
+				} // End Tuner Register Manual Write
+			} // End 
+		} // End Tuner Registers
+
+        SmGui::LeftLabel("Antenna Port");
+        SmGui::FillWidth();
+        if (SmGui::Combo(CONCAT("##_hydrasdr_port_", _this->name), &_this->portId, _this->ports.txt)) {
+            if (_this->running) {
+                hydrasdr_set_rf_port(_this->openDev, _this->ports[_this->portId]);
+            }
+            if (_this->selectedSerStr != "") {
+                config.acquire();
+                config.conf["devices"][_this->selectedSerStr]["port"] = _this->ports.key(_this->portId);
+                config.release(true);
+            }
+        }
 
         SmGui::BeginGroup();
         SmGui::Columns(3, CONCAT("HydraSDRGainModeColumns##_", _this->name), false);
@@ -559,8 +714,11 @@ private:
         }
     }
 
+    char valStr[256];
+    char regStr[256];
+
     static int callback(hydrasdr_transfer_t* transfer) {
-        HydraSDR_RFOne_SourceModule* _this = (HydraSDR_RFOne_SourceModule*)transfer->ctx;
+        HydraSDRSourceModule* _this = (HydraSDRSourceModule*)transfer->ctx;
         memcpy(_this->stream.writeBuf, transfer->samples, transfer->sample_count * sizeof(dsp::complex_t));
         if (!_this->stream.swap(transfer->sample_count)) { return -1; }
         return 0;
@@ -578,6 +736,7 @@ private:
     std::string selectedSerStr = "";
     int devId = 0;
     int srId = 0;
+    int portId = 0;
 
     bool biasT = false;
 
@@ -596,27 +755,26 @@ private:
     int devFd = 0;
 #endif
 
-    std::vector<uint64_t> devList;
-    std::string devListTxt;
-    std::vector<uint32_t> sampleRateList;
-    std::string sampleRateListTxt;
+    OptionList<std::string, uint64_t> devices;
+    OptionList<uint32_t, uint32_t> samplerates;
+    OptionList<std::string, hydrasdr_rf_port_t> ports;
 };
 
 MOD_EXPORT void _INIT_() {
     json def = json({});
     def["devices"] = json({});
     def["device"] = "";
-    config.setPath(core::args["root"].s() + "/hydrasdr_rfone_config.json");
+    config.setPath(core::args["root"].s() + "/hydrasdr_config.json");
     config.load(def);
     config.enableAutoSave();
 }
 
 MOD_EXPORT ModuleManager::Instance* _CREATE_INSTANCE_(std::string name) {
-    return new HydraSDR_RFOne_SourceModule(name);
+    return new HydraSDRSourceModule(name);
 }
 
 MOD_EXPORT void _DELETE_INSTANCE_(ModuleManager::Instance* instance) {
-    delete (HydraSDR_RFOne_SourceModule*)instance;
+    delete (HydraSDRSourceModule*)instance;
 }
 
 MOD_EXPORT void _END_() {

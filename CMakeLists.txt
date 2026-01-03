@@ -164,7 +164,7 @@ add_subdirectory("source_modules/hermes_source")
 endif (OPT_BUILD_HERMES_SOURCE)
 
 if (OPT_BUILD_HYDRASDR_RFONE_SOURCE)
-add_subdirectory("source_modules/hydrasdr_rfone_source")
+add_subdirectory("source_modules/hydrasdr_source")
 endif (OPT_BUILD_HYDRASDR_RFONE_SOURCE)
 
 if (OPT_BUILD_KCSDR_SOURCE)

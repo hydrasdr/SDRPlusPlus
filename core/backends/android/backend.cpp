@@ -408,7 +408,7 @@ namespace backend {
         { 0x1d50, 0xcc15 }
     };
 
-    const std::vector<DevVIDPID> HYDRASDR_RFONE_VIDPIDS = {
+    const std::vector<DevVIDPID> HYDRASDR_VIDPIDS = {
         { 0x1d50, 0x60a1 },
         { 0x38af, 0x0001 }
     };
