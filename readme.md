@@ -29,14 +29,15 @@ You can download them [here](https://github.com/hydrasdr/SDRPlusPlus/releases/ta
 GitHub currently requires an account for the files to be downloadable so make sure you are logged in.
 
 ## If "HydraSDR RFOne" does not appear in the source list
-> **Note:** This issue only affects **existing SDR++ users** upgrading from older versions.
+> **Note:** This issue only affects Linux/MacOS or **existing SDR++ users** upgrading from older versions.
 > **New users** installing for the first time will not encounter this problem.
 1. Open the **SDR++ Module Manager**.
-2. Locate **hydrasdr\_rfone\_source** in the list.
-3. Add it with the name **HydraSDR RFOne Source**, then click **+** to confirm. 
-- <img width="375" height="260" alt="image" src="https://github.com/user-attachments/assets/b0687b8a-06cf-4f39-8623-9a31946090ac" />
-4. You should now be able to select **HydraSDR RFOne** from the source list. 
-- <img width="388" height="322" alt="SDR++_Configure_HydraSDR RFOne Source" src="https://github.com/user-attachments/assets/249bf996-9fa1-497a-83d2-f22104cf5cde" />
+2. Locate **hydrasdr_source** in the list.
+3. Add it with the name **HydraSDR Source**, then click **+** to confirm.
+- <img width="331" height="261" alt="Add HydraSDR Source and click +" src="https://github.com/user-attachments/assets/1a442727-d5a3-4f8d-9e99-a9646a02f87f" />
+
+4. You should now be able to select **HydraSDR** from the source list.
+- <img width="344" height="370" alt="SDR++_Configure_HydraSDR Source" src="https://github.com/user-attachments/assets/04b6c05b-6a89-40f7-902c-83657568f9e9" />
 
 ## Windows
 
