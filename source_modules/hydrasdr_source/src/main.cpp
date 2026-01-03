@@ -31,6 +31,8 @@ public:
     HydraSDRSourceModule(std::string name) {
         this->name = name;
 
+        serverMode = (bool)core::args["server"];
+
         // Define the ports
         ports.define("rx0", "RX0", HYDRASDR_RF_PORT_RX0);
         ports.define("rx1", "RX1", HYDRASDR_RF_PORT_RX1);
@@ -391,126 +393,128 @@ private:
 
         if (_this->running) { SmGui::EndDisabled(); }
 
-		if (ImGui::CollapsingHeader("Tuner Registers")) {
-			static bool show_registers = false;
-			static bool registers_changed = false;
-			static uint8_t regs[32] = { 0 };
-			static uint8_t prev_regs[32] = { 0 };
-			static std::array<bool, 32> reg_changed = {false};  // Changed to track individual registers
+        // Tuner Registers section uses direct ImGui calls that don't work in server mode
+        if (!_this->serverMode) {
+            if (ImGui::CollapsingHeader("Tuner Registers")) {
+                static bool show_registers = false;
+                static bool registers_changed = false;
+                static uint8_t regs[32] = { 0 };
+                static uint8_t prev_regs[32] = { 0 };
+                static std::array<bool, 32> reg_changed = {false};
 
-			if (ImGui::Button(CONCAT("DumpTunerRegs##_hydrasdr_refr_", _this->name))) {
-				if (_this->running) {
-					// Dump Tuner Registers
-					int result;
-					char buf[256];
-					result = hydrasdr_dump_registers(_this->openDev, 0, 32, &regs[0]);
-					if( result == HYDRASDR_SUCCESS ) {
-						//flog::info("hydrasdr_dump_registers reg 33 = {0}", buf);
-					} else {
-						flog::info("hydrasdr_dump_registers() failed");
-					}
-					for(int i = 0; i < 32; i+=8) 
-					{
-						sprintf(buf, "%02d: 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X", 
-								i, regs[i+0], regs[i+1], regs[i+2], regs[i+3], regs[i+4], regs[i+5], regs[i+6], regs[i+7]);
-						flog::info("hydrasdr_dump_registers {0}", buf);
-					}
-					registers_changed = true;
-					
-					// Check which individual registers have changed
-					for (int i = 0; i < 32; i++) {
-						reg_changed[i] = (regs[i] != prev_regs[i]);
-					}
-					std::memcpy(prev_regs, regs, sizeof(regs));
-				}
-			}
-			ImGui::Checkbox("Show Registers", &show_registers);
-			if (show_registers) {
-				static ImFont* monoFont = nullptr;
-				/*
-				if(monoFont == nullptr) {
-					// Configure the font to be monospaced
-					ImGuiIO& io = ImGui::GetIO();
-					// Load the ProggyClean built-in monospaced font (size 13)
-					io.Fonts->AddFontDefault();  // This line adds the default proportional font (optional)
-					monoFont = io.Fonts->AddFontFromFileTTF(NULL, 13.0f);  // Built-in monospaced font
-					// Rebuild the font atlas
-					io.Fonts->Build();
-				}
-				*/
-				if(monoFont != nullptr)
-					ImGui::PushFont(monoFont);
-				ImGui::BeginChild("RegistersDisplay", ImVec2(0, ImGui::GetTextLineHeight() * 5), false, ImGuiWindowFlags_NoScrollbar);
-				
-				for (int i = 0; i < 32; i += 8) {
-					char line_start[8];
-					snprintf(line_start, sizeof(line_start), "%02d:", i);
-					ImGui::Text("%s", line_start);
-					ImGui::SameLine();
-					
-					for (int j = 0; j < 8; ++j) {
-						int idx = i + j;
-						ImVec4 color = reg_changed[idx] ? ImVec4(0.0f, 1.0f, 0.0f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-						char reg_value[8];
-						snprintf(reg_value, sizeof(reg_value), "0x%02X", regs[idx]);
-						ImGui::TextColored(color, "%s", reg_value);
-						if (j < 7) ImGui::SameLine();
-					}
-				}
+                if (ImGui::Button(CONCAT("DumpTunerRegs##_hydrasdr_refr_", _this->name))) {
+                    if (_this->running) {
+                        int result;
+                        char buf[256];
+                        result = hydrasdr_dump_registers(_this->openDev, 0, 32, &regs[0]);
+                        if (result == HYDRASDR_SUCCESS) {
+                            // Success
+                        } else {
+                            flog::info("hydrasdr_dump_registers() failed");
+                        }
+                        for (int i = 0; i < 32; i += 8) {
+                            sprintf(buf, "%02d: 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X",
+                                    i, regs[i+0], regs[i+1], regs[i+2], regs[i+3], regs[i+4], regs[i+5], regs[i+6], regs[i+7]);
+                            flog::info("hydrasdr_dump_registers {0}", buf);
+                        }
+                        registers_changed = true;
 
-				ImGui::EndChild();
+                        // Check which individual registers have changed
+                        for (int i = 0; i < 32; i++) {
+                            reg_changed[i] = (regs[i] != prev_regs[i]);
+                        }
+                        std::memcpy(prev_regs, regs, sizeof(regs));
+                    }
+                }
 
-				if (ImGui::BeginPopupContextItem("RegisterContextMenu")) {
-					if (ImGui::MenuItem("Copy All")) {
-						std::string display_text;
-						char line_buffer[128];
-						for (int i = 0; i < 32; i += 8) {
-							int chars_written = snprintf(line_buffer, sizeof(line_buffer), "%02d: ", i);
-							for (int j = 0; j < 8; ++j) {
-								chars_written += snprintf(line_buffer + chars_written, sizeof(line_buffer) - chars_written, 
-														  "0x%02X ", regs[i + j]);
-							}
-							display_text += std::string(line_buffer) + "\n";
-						}
-						ImGui::SetClipboardText(display_text.c_str());
-					}
-					ImGui::EndPopup();
-				}
-				if(monoFont != nullptr)
-					ImGui::PopFont(); // Restore font
-				
-				// Tuner Register Manual Write
-				static int man_reg = 0;
-				static char man_val[5] = "00";
+                ImGui::Checkbox("Show Registers", &show_registers);
+                if (show_registers) {
+                    static ImFont* monoFont = nullptr;
+                    /*
+                    if (monoFont == nullptr) {
+                        ImGuiIO& io = ImGui::GetIO();
+                        io.Fonts->AddFontDefault();
+                        monoFont = io.Fonts->AddFontFromFileTTF(NULL, 13.0f);
+                        io.Fonts->Build();
+                    }
+                    */
+                    if (monoFont != nullptr) {
+                        ImGui::PushFont(monoFont);
+                    }
+                    ImGui::BeginChild("RegistersDisplay", ImVec2(0, ImGui::GetTextLineHeight() * 5), false, ImGuiWindowFlags_NoScrollbar);
 
-				ImGui::Text("Tuner");
-				ImGui::SameLine();
-				ImGui::Text("RegNum:");
-				ImGui::SameLine();
-				ImGui::PushItemWidth(30);
-				ImGui::InputInt("##man_reg", &man_reg, 0, 0);
-				ImGui::PopItemWidth();
-				if (man_reg < 0) man_reg = 0;
-				if (man_reg > 31) man_reg = 31;
+                    for (int i = 0; i < 32; i += 8) {
+                        char line_start[8];
+                        snprintf(line_start, sizeof(line_start), "%02d:", i);
+                        ImGui::Text("%s", line_start);
+                        ImGui::SameLine();
 
-				ImGui::SameLine();
-				ImGui::Text("RegVal(Hex):");
-				ImGui::SameLine();
-				ImGui::PushItemWidth(30);
-				ImGui::InputText("##man_val", man_val, 5, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
-				ImGui::PopItemWidth();
+                        for (int j = 0; j < 8; ++j) {
+                            int idx = i + j;
+                            ImVec4 color = reg_changed[idx] ? ImVec4(0.0f, 1.0f, 0.0f, 1.0f) : ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+                            char reg_value[8];
+                            snprintf(reg_value, sizeof(reg_value), "0x%02X", regs[idx]);
+                            ImGui::TextColored(color, "%s", reg_value);
+                            if (j < 7) ImGui::SameLine();
+                        }
+                    }
 
-				ImGui::SameLine();
-				if (SmGui::Button("Write")) {
-					if (_this->running) {
-						unsigned int v = 0;
-						sscanf(man_val, "%x", &v);
-						flog::info("hydrasdr_r82x_write RegNum:{0} RegVal:{1}", (uint8_t)man_reg, (uint8_t)v);
-						hydrasdr_r82x_write(_this->openDev, (uint8_t)man_reg, (uint8_t)v);
-					}
-				} // End Tuner Register Manual Write
-			} // End 
-		} // End Tuner Registers
+                    ImGui::EndChild();
+
+                    if (ImGui::BeginPopupContextItem("RegisterContextMenu")) {
+                        if (ImGui::MenuItem("Copy All")) {
+                            std::string display_text;
+                            char line_buffer[128];
+                            for (int i = 0; i < 32; i += 8) {
+                                int chars_written = snprintf(line_buffer, sizeof(line_buffer), "%02d: ", i);
+                                for (int j = 0; j < 8; ++j) {
+                                    chars_written += snprintf(line_buffer + chars_written, sizeof(line_buffer) - chars_written,
+                                                              "0x%02X ", regs[i + j]);
+                                }
+                                display_text += std::string(line_buffer) + "\n";
+                            }
+                            ImGui::SetClipboardText(display_text.c_str());
+                        }
+                        ImGui::EndPopup();
+                    }
+
+                    if (monoFont != nullptr) {
+                        ImGui::PopFont();
+                    }
+
+                    // Tuner Register Manual Write
+                    static int man_reg = 0;
+                    static char man_val[5] = "00";
+
+                    ImGui::Text("Tuner");
+                    ImGui::SameLine();
+                    ImGui::Text("RegNum:");
+                    ImGui::SameLine();
+                    ImGui::PushItemWidth(30);
+                    ImGui::InputInt("##man_reg", &man_reg, 0, 0);
+                    ImGui::PopItemWidth();
+                    if (man_reg < 0) man_reg = 0;
+                    if (man_reg > 31) man_reg = 31;
+
+                    ImGui::SameLine();
+                    ImGui::Text("RegVal(Hex):");
+                    ImGui::SameLine();
+                    ImGui::PushItemWidth(30);
+                    ImGui::InputText("##man_val", man_val, 5, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
+                    ImGui::PopItemWidth();
+
+                    ImGui::SameLine();
+                    if (SmGui::Button("Write")) {
+                        if (_this->running) {
+                            unsigned int v = 0;
+                            sscanf(man_val, "%x", &v);
+                            flog::info("hydrasdr_r82x_write RegNum:{0} RegVal:{1}", (uint8_t)man_reg, (uint8_t)v);
+                            hydrasdr_r82x_write(_this->openDev, (uint8_t)man_reg, (uint8_t)v);
+                        }
+                    }
+                }
+            }
+        }
 
         SmGui::LeftLabel("Antenna Port");
         SmGui::FillWidth();
@@ -728,6 +732,7 @@ private:
     double sampleRate;
     SourceManager::SourceHandler handler;
     bool running = false;
+    bool serverMode = false;
     double freq;
     uint64_t selectedSerial = 0;
     std::string selectedSerStr = "";
