@@ -403,15 +403,12 @@ private:
 					// Dump Tuner Registers
 					int result;
 					char buf[256];
-					auto startTime = std::chrono::high_resolution_clock::now();
 					result = hydrasdr_dump_registers(_this->openDev, 0, 32, &regs[0]);
 					if( result == HYDRASDR_SUCCESS ) {
 						//flog::info("hydrasdr_dump_registers reg 33 = {0}", buf);
 					} else {
 						flog::info("hydrasdr_dump_registers() failed");
 					}
-					auto endTime = std::chrono::high_resolution_clock::now();
-					flog::warn("hydrasdr_dump_registers to read 32 registers took {0} us", (int64_t)((std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime)).count()));
 					for(int i = 0; i < 32; i+=8) 
 					{
 						sprintf(buf, "%02d: 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X", 
