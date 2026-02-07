@@ -85,8 +85,8 @@ jobs:
 
         - name: Install libhydrasdr
           run: |
-            git clone https://github.com/hydrasdr/rfone_host
-            cd rfone_host
+            git clone https://github.com/hydrasdr/hydrasdr-host
+            cd hydrasdr-host
             mkdir build
             cd build
             cmake .. -DCMAKE_BUILD_TYPE=Release `
@@ -107,7 +107,7 @@ jobs:
             New-Item -ItemType Directory -Path "C:/Program Files/PothosSDR/bin" -Force
             
             # Find and copy hydrasdr headers
-            cd rfone_host
+            cd hydrasdr-host
             $headers = Get-ChildItem -Recurse -Filter "hydrasdr*.h"
             foreach ($header in $headers) {
                 Copy-Item $header.FullName "C:/Program Files/PothosSDR/include/"
@@ -185,7 +185,7 @@ jobs:
           run: git clone https://github.com/osmocom/rtl-sdr && cd rtl-sdr && mkdir build && cd build && cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DCMAKE_BUILD_TYPE=Release .. && make -j3 LIBRARY_PATH=$(pkg-config --libs-only-L libusb-1.0 | sed 's/\-L//') && sudo make install && cd ../../
 
         - name: Install libhydrasdr
-          run: git clone https://github.com/hydrasdr/rfone_host && cd rfone_host && mkdir build && cd build && cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DCMAKE_BUILD_TYPE=Release .. && make -j3 && sudo make install && cd ../../
+          run: git clone https://github.com/hydrasdr/hydrasdr-host && cd hydrasdr-host && mkdir build && cd build && cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DCMAKE_BUILD_TYPE=Release .. && make -j3 && sudo make install && cd ../../
 
         - name: Prepare CMake
           working-directory: ${{runner.workspace}}/build
@@ -245,7 +245,7 @@ jobs:
           run: git clone https://github.com/osmocom/rtl-sdr && cd rtl-sdr && mkdir build && cd build && cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DCMAKE_BUILD_TYPE=Release .. && make -j3 LIBRARY_PATH=$(pkg-config --libs-only-L libusb-1.0 | sed 's/\-L//') && sudo make install && cd ../../
 
         - name: Install libhydrasdr
-          run: git clone https://github.com/hydrasdr/rfone_host && cd rfone_host && mkdir build && cd build && cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DCMAKE_BUILD_TYPE=Release .. && make -j3 && sudo make install && cd ../../
+          run: git clone https://github.com/hydrasdr/hydrasdr-host && cd hydrasdr-host && mkdir build && cd build && cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 -DCMAKE_BUILD_TYPE=Release .. && make -j3 && sudo make install && cd ../../
 
         - name: Prepare CMake
           working-directory: ${{runner.workspace}}/build

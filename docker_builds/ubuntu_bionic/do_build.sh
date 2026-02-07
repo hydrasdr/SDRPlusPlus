@@ -73,8 +73,8 @@ make install
 cd ../../
 
 # Build and install libhydrasdr
-git clone https://github.com/hydrasdr/rfone_host rfone_host
-cd rfone_host
+git clone https://github.com/hydrasdr/hydrasdr-host hydrasdr-host
+cd hydrasdr-host
 mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
