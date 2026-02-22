@@ -194,15 +194,15 @@ public:
             if (err != 0) {
                 char buf[1024];
                 snprintf(buf, sizeof(buf), "%016" PRIX64, serial);
-                flog::error("Could not open HydraSDR {0}", buf);
+                flog::error("Could not open HydraSDR {0} (err={1})", buf, err);
                 selectedSerial = 0;
                 return;
             }
         }
-        catch (const std::exception&) {
+        catch (const std::exception& e) {
             char buf[1024];
             snprintf(buf, sizeof(buf), "%016" PRIX64, serial);
-            flog::error("Could not open HydraSDR {}", buf);
+            flog::error("Could not open HydraSDR {} (exception: {})", buf, e.what());
             return;
         }
         devId = devices.valueId(serial);
