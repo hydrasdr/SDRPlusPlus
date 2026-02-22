@@ -135,14 +135,16 @@ public:
             devices.define(serialBuf, displayBuf, serials[i]);
         }
 #else
+        devices.clear();
+
         // Check for device presence
         int vid, pid;
         devFd = backend::getDeviceFD(vid, pid, backend::HYDRASDR_VIDPIDS);
         if (devFd < 0) { return; }
 
-        // Get device info
+        // Get device info (use non-zero fake serial so start() guard passes)
         std::string fakeName = "HydraSDR USB";
-        devices.define(fakeName, 0);
+        devices.define(fakeName, (uint64_t)1);
 #endif
     }
 
