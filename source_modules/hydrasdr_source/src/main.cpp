@@ -142,9 +142,9 @@ public:
         devFd = backend::getDeviceFD(vid, pid, backend::HYDRASDR_VIDPIDS);
         if (devFd < 0) { return; }
 
-        // Get device info (use non-zero fake serial so start() guard passes)
+        // Get device info
         std::string fakeName = "HydraSDR USB";
-        devices.define(fakeName, (uint64_t)1);
+        devices.define(fakeName, 0);
 #endif
     }
 
@@ -523,14 +523,17 @@ private:
     static void start(void* ctx) {
         HydraSDRSourceModule* _this = (HydraSDRSourceModule*)ctx;
         if (_this->running) { return; }
+#ifndef __ANDROID__
         if (_this->selectedSerial == 0) {
             flog::error("Tried to start HydraSDR source with null serial");
             return;
         }
-
-#ifndef __ANDROID__
         int err = hydrasdr_open_sn(&_this->openDev, _this->selectedSerial);
 #else
+        if (_this->devFd < 0) {
+            flog::error("Tried to start HydraSDR source with invalid fd");
+            return;
+        }
         int err = hydrasdr_open_fd(&_this->openDev, _this->devFd);
 #endif
         if (err != 0) {
