@@ -36,6 +36,7 @@ option(OPT_BUILD_SPECTRAN_SOURCE "Build Spectran Source Module (Dependencies: Aa
 option(OPT_BUILD_SPECTRAN_HTTP_SOURCE "Build Spectran HTTP Source Module (no dependencies required)" ON)
 option(OPT_BUILD_SPYSERVER_SOURCE "Build SpyServer Source Module (no dependencies required)" ON)
 option(OPT_BUILD_USRP_SOURCE "Build USRP Source Module (libuhd)" OFF)
+option(OPT_BUILD_VRTZMQ_SOURCE "Build VRT ZMQ Source Module (Dependencies: libzmq libvrt)" ON)
 
 # Sinks
 option(OPT_BUILD_ANDROID_AUDIO_SINK "Build Android Audio Sink Module (Dependencies: AAudio, only for android)" OFF)
@@ -61,6 +62,7 @@ option(OPT_BUILD_WEATHER_SAT_DECODER "Build the HRPT decoder module (no dependen
 option(OPT_BUILD_DISCORD_PRESENCE "Build the Discord Rich Presence module" ON)
 option(OPT_BUILD_FREQUENCY_MANAGER "Build the Frequency Manager module" ON)
 option(OPT_BUILD_IQ_EXPORTER "Build the IQ Exporter module" ON)
+option(OPT_BUILD_IF_AVERAGE "Build IF Average module (radio astronomy)" ON)
 option(OPT_BUILD_RECORDER "Audio and baseband recorder" ON)
 option(OPT_BUILD_RIGCTL_CLIENT "Rigctl client to make SDR++ act as a panadapter" ON)
 option(OPT_BUILD_RIGCTL_SERVER "Rigctl backend for controlling SDR++ with software like gpredict" ON)
@@ -235,6 +237,9 @@ if (OPT_BUILD_USRP_SOURCE)
 add_subdirectory("source_modules/usrp_source")
 endif (OPT_BUILD_USRP_SOURCE)
 
+if (OPT_BUILD_VRTZMQ_SOURCE)
+add_subdirectory("source_modules/vrtzmq_source")
+endif (OPT_BUILD_VRTZMQ_SOURCE)
 
 # Sink modules
 if (OPT_BUILD_ANDROID_AUDIO_SINK)
@@ -316,6 +321,10 @@ endif (OPT_BUILD_FREQUENCY_MANAGER)
 if (OPT_BUILD_IQ_EXPORTER)
 add_subdirectory("misc_modules/iq_exporter")
 endif (OPT_BUILD_IQ_EXPORTER)
+
+if (OPT_BUILD_IF_AVERAGE)
+add_subdirectory("misc_modules/if_average")
+endif (OPT_BUILD_IF_AVERAGE)
 
 if (OPT_BUILD_RECORDER)
 add_subdirectory("misc_modules/recorder")
