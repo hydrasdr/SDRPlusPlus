@@ -10,17 +10,9 @@ echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://ap
 apt update
 
 # Install dependencies and tools
-apt install -y build-essential cmake git libfftw3-dev libglfw3-dev libvolk1-dev libzstd-dev libairspy-dev \
-            libiio-dev libad9361-dev librtaudio-dev libhackrf-dev librtlsdr-dev libbladerf-dev liblimesuite-dev p7zip-full wget portaudio19-dev \
-            libcodec2-dev libudev-dev autoconf libtool xxd libspdlog-dev
-
-# Install SDRPlay libraries
-SDRPLAY_ARCH=$(dpkg --print-architecture)
-wget https://www.sdrplay.com/software/SDRplay_RSP_API-Linux-3.15.2.run
-7z x ./SDRplay_RSP_API-Linux-3.15.2.run
-7z x ./SDRplay_RSP_API-Linux-3.15.2
-cp $SDRPLAY_ARCH/libsdrplay_api.so.3.15 /usr/lib/libsdrplay_api.so
-cp inc/* /usr/include/
+apt install -y build-essential cmake git libfftw3-dev libglfw3-dev libvolk1-dev libzstd-dev \
+            librtaudio-dev libhackrf-dev librtlsdr-dev libbladerf-dev liblimesuite-dev portaudio19-dev \
+            libcodec2-dev libudev-dev
 
 # Install a more recent libusb version
 wget https://github.com/libusb/libusb/releases/download/v1.0.25/libusb-1.0.25.tar.bz2
@@ -30,47 +22,6 @@ cd libusb-1.0.25
 make -j2
 make install
 cd ..
-
-# Install a more recent libairspyhf version
-git clone https://github.com/airspy/airspyhf
-cd airspyhf
-mkdir build
-cd build
-cmake .. -DINSTALL_UDEV_RULES=ON
-make -j2
-make install
-ldconfig
-cd ../../
-
-# Install libperseus
-git clone https://github.com/Microtelecom/libperseus-sdr
-cd libperseus-sdr
-autoreconf -i
-./configure
-make
-make install
-ldconfig
-cd ..
-
-# Install librfnm
-git clone https://github.com/AlexandreRouma/librfnm
-cd librfnm
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
-make -j2
-make install
-cd ../../
-
-# Install libfobos
-git clone https://github.com/AlexandreRouma/libfobos
-cd libfobos
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
-make -j2
-make install
-cd ../../
 
 # Build and install libhydrasdr
 git clone https://github.com/hydrasdr/hydrasdr-host hydrasdr-host
@@ -97,7 +48,7 @@ echo 'Cflags: -I/usr/include/codec2' >> /usr/share/pkgconfig/codec2.pc
 cd SDRPlusPlus
 mkdir build
 cd build
-cmake .. -DOPT_BUILD_SDRPLAY_SOURCE=ON -DOPT_BUILD_BLADERF_SOURCE=OFF -DOPT_BUILD_LIMESDR_SOURCE=ON -DOPT_BUILD_NEW_PORTAUDIO_SINK=ON -DOPT_OVERRIDE_STD_FILESYSTEM=ON -DOPT_BUILD_M17_DECODER=ON -DOPT_BUILD_PERSEUS_SOURCE=ON -DOPT_BUILD_RFNM_SOURCE=ON -DOPT_BUILD_FOBOSSDR_SOURCE=ON -DOPT_BUILD_HYDRASDR_RFONE_SOURCE=ON
+cmake .. -DOPT_BUILD_BLADERF_SOURCE=OFF -DOPT_BUILD_LIMESDR_SOURCE=ON -DOPT_BUILD_NEW_PORTAUDIO_SINK=ON -DOPT_OVERRIDE_STD_FILESYSTEM=ON -DOPT_BUILD_M17_DECODER=ON -DOPT_BUILD_HYDRASDR_RFONE_SOURCE=ON
 make VERBOSE=1 -j2
 
 # Generate package

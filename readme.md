@@ -174,8 +174,8 @@ The modules built will be some of the following (Repeat the instructions above f
 * `build/recorder/Release/`
 * `build/rtl_tcp_source/Release/`
 * `build/spyserver_source/Release/`
-* `build/airspyhf_source/Release/`
-* `build/plutosdr_source/Release/`
+* `build/airspyhf_source/Release/` (disabled by default)
+* `build/plutosdr_source/Release/` (disabled by default)
 * `build/audio_sink/Release/`
 
 # Building on Linux / BSD
@@ -289,7 +289,7 @@ Make sure to install portaudio as it'll be needed later.
 An example install command would be:
 
 ```sh
-brew install libusb fftw glfw airspy airspyhf portaudio hackrf rtl-sdr libbladerf codec2 zstd
+brew install libusb fftw glfw portaudio hackrf rtl-sdr libbladerf codec2 zstd
 pip3 install mako
 ```
 
@@ -329,30 +329,30 @@ Modules in beta are still included in releases for the most part but not enabled
 
 | Name                 | Stage      | Dependencies      | Option                         | Built by default| Built in Release        | Enabled in SDR++ by default |
 |----------------------|------------|-------------------|--------------------------------|:---------------:|:-----------------------:|:---------------------------:|
-| airspy_source        | Working    | libairspy         | OPT_BUILD_AIRSPY_SOURCE        | ✅              | ✅                     | ✅                         |
-| airspyhf_source      | Working    | libairspyhf       | OPT_BUILD_AIRSPYHF_SOURCE      | ✅              | ✅                     | ✅                         |
+| airspy_source        | Working    | libairspy         | OPT_BUILD_AIRSPY_SOURCE        | ⛔              | ⛔                     | ⛔                         |
+| airspyhf_source      | Working    | libairspyhf       | OPT_BUILD_AIRSPYHF_SOURCE      | ⛔              | ⛔                     | ⛔                         |
 | audio_source         | Working    | rtaudio           | OPT_BUILD_AUDIO_SOURCE         | ✅              | ✅                     | ✅                         |
 | bladerf_source       | Working    | libbladeRF        | OPT_BUILD_BLADERF_SOURCE       | ⛔              | ✅ (not Debian Buster) | ✅                         |
 | file_source          | Working    | -                 | OPT_BUILD_FILE_SOURCE          | ✅              | ✅                     | ✅                         |
-| fobossdr_source      | Working    | libfobos          | OPT_BUILD_FOBOSSDR_SOURCE      | ✅              | ✅                     | ✅                         |
+| fobossdr_source      | Working    | libfobos          | OPT_BUILD_FOBOSSDR_SOURCE      | ⛔              | ⛔                     | ⛔                         |
 | hackrf_source        | Working    | libhackrf         | OPT_BUILD_HACKRF_SOURCE        | ✅              | ✅                     | ✅                         |
 | harogic_source       | Beta       | htra_api          | OPT_BUILD_HAROGIC_SOURCE       | ⛔              | ⛔                     | ✅                         |
-| hermes_source        | Beta       | -                 | OPT_BUILD_HERMES_SOURCE        | ✅              | ✅                     | ✅                         |
+| hermes_source        | Beta       | -                 | OPT_BUILD_HERMES_SOURCE        | ⛔              | ⛔                     | ⛔                         |
 | hydrasdr_rfone_source| Working    | libhydrasdr       | OPT_BUILD_HYDRASDR_RFONE_SOURCE| ✅              | ✅                     | ✅                         |
 | kcsdr_source         | Unfinished | libkcsdr          | OPT_BUILD_KCSDR_SOURCE         | ⛔              | ⛔                     | ⛔                         |
 | limesdr_source       | Working    | liblimesuite      | OPT_BUILD_LIMESDR_SOURCE       | ⛔              | ✅                     | ✅                         |
 | network_source       | Beta       | -                 | OPT_BUILD_NETWORK_SOURCE       | ✅              | ✅                     | ✅                         |
-| perseus_source       | Beta       | libperseus-sdr    | OPT_BUILD_PERSEUS_SOURCE       | ⛔              | ✅                     | ✅                         |
-| plutosdr_source      | Working    | libiio, libad9361 | OPT_BUILD_PLUTOSDR_SOURCE      | ✅              | ✅                     | ✅                         |
-| rfnm_source          | Beta       | librfnm           | OPT_BUILD_RFNM_SOURCE          | ⛔              | ✅                     | ✅                         |
-| rfspace_source       | Working    | -                 | OPT_BUILD_RFSPACE_SOURCE       | ✅              | ✅                     | ✅                         |
+| perseus_source       | Beta       | libperseus-sdr    | OPT_BUILD_PERSEUS_SOURCE       | ⛔              | ⛔                     | ⛔                         |
+| plutosdr_source      | Working    | libiio, libad9361 | OPT_BUILD_PLUTOSDR_SOURCE      | ⛔              | ⛔                     | ⛔                         |
+| rfnm_source          | Beta       | librfnm           | OPT_BUILD_RFNM_SOURCE          | ⛔              | ⛔                     | ⛔                         |
+| rfspace_source       | Working    | -                 | OPT_BUILD_RFSPACE_SOURCE       | ⛔              | ⛔                     | ⛔                         |
 | rtl_sdr_source       | Working    | librtlsdr         | OPT_BUILD_RTL_SDR_SOURCE       | ✅              | ✅                     | ✅                         |
 | rtl_tcp_source       | Working    | -                 | OPT_BUILD_RTL_TCP_SOURCE       | ✅              | ✅                     | ✅                         |
-| sdrplay_source       | Working    | SDRplay API       | OPT_BUILD_SDRPLAY_SOURCE       | ⛔              | ✅                     | ✅                         |
+| sdrplay_source       | Working    | SDRplay API       | OPT_BUILD_SDRPLAY_SOURCE       | ⛔              | ⛔                     | ⛔                         |
 | sdrpp_server_source  | Working    | -                 | OPT_BUILD_SDRPP_SERVER_SOURCE  | ✅              | ✅                     | ✅                         |
 | soapy_source         | Deprecated | soapysdr          | OPT_BUILD_SOAPY_SOURCE         | ⛔              | ⛔                     | ⛔                         |
 | spectran_source      | Unfinished | RTSA Suite        | OPT_BUILD_SPECTRAN_SOURCE      | ⛔              | ⛔                     | ⛔                         |
-| spectran_http_source | Beta       | -                 | OPT_BUILD_SPECTRAN_HTTP_SOURCE | ✅              | ✅                     | ✅                         |
+| spectran_http_source | Beta       | -                 | OPT_BUILD_SPECTRAN_HTTP_SOURCE | ⛔              | ⛔                     | ⛔                         |
 | spyserver_source     | Working    | -                 | OPT_BUILD_SPYSERVER_SOURCE     | ✅              | ✅                     | ✅                         |
 | usrp_source          | Beta       | libuhd            | OPT_BUILD_USRP_SOURCE          | ⛔              | ⛔                     | ✅                         |
 
